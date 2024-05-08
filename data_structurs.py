@@ -33,7 +33,7 @@ LanesQ = {}
 Phases = []
 
 # init
-lane_id = 0
+lane_id = 1
 for From in directions:
     for To in going:
         Lanes.append(Lane(From,To,0,lane_id)) # TODO: should add a way to make more than 1 lane

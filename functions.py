@@ -2,17 +2,15 @@ from data_structurs import *
 from Classes import *
 
 
-
-
-
 def isFirst(car):
     return car.queue[0] == car
 
 def greenLight(car):
-    return True
+    return car.lane.status
     
 
-# returns the car instance of the car standing before this one
+# returns the car instance of the car standing before this one,
+# # 0 if there aren't any
 def nextCar(car):
     if isFirst(car) :
         return 0
@@ -31,19 +29,23 @@ def IsFree2Move(car):
 
 def calcLane(path):
     lanes = []
-    for i in range(3):
-        if (path[0],path[1],i) in Lanes : 
-            lanes.append((path[0],path[1],i))
+    for lane in Lanes:
+        if lane.source == path[0] and lane.dest == path[1]:
+            lanes.append(lane)
     if len(lanes) == 1 :
         return lanes[0]
     # else choose the least busy lane
     min_size = 1000
-    choosing = -1
+    ret = 0
     for lane in lanes:
-        if min_size > LanesQ[lane].qsize():
-            min_size = LanesQ[lane].qsize()
-            choosing = lane
-    return choosing 
+        if min_size > lane.q.qsize():
+            min_size = lane.q.qsize()
+            ret = lane
+    return ret
+    
+def calcCarID(lane):
+    return lane.id*10000 + lane.car_counter
+
 
 def init_location(entrance_lane):
     ret = {
@@ -54,3 +56,19 @@ def init_location(entrance_lane):
         }
     return ret
 
+
+# updates: Cars,LaneQ,starvationQ,Lane.car_counter
+def enter_new_car( type, len, speed, path):
+    lane = calcLane(path)
+    lane.car_counter += 1
+    id = calcCarID(lane)
+    car = Vehicle(type, len, speed, path,CUR_TIME,id)
+    Cars[car.id] = car
+    starvationQ.put(car)
+    LanesQ[lane].put(car)
+    return
+
+
+
+def check_cars_to_enter(table):
+    return

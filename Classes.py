@@ -7,18 +7,17 @@
     # 6. pay attention to update every car added to any lane to Lane->Phase->Intersection
 
 from data_structurs import *
-from functions import *
-
+from functions import init_location,IsFree2Move,check_cars_to_enter
 
 
 class Vehicle:
-    def __init__(self, type, len, speed, path,enter_time,id):
+    def __init__(self, type, len, speed, path,enter_time,id,lane):
         self.id = id
         self.type = type
         self.len = len
         self.speed = speed
         self.path = path
-        self.lane = calcLane(path)
+        self.lane = lane
         self.enter_time = enter_time
         self.location = init_location(path[0])
         self.queue = LanesQ[self.lane]
@@ -54,7 +53,6 @@ class Vehicle:
     def wait_time(self):
         return CUR_TIME - self.enter_time
 
-
 class Lane :
     def __init__(self,From,To,num,id):
         self.id = id
@@ -64,6 +62,8 @@ class Lane :
         self.q = queue.Queue()
         self.tuple = (From,To,num)
         self.cumulative_time = 0
+        self.status = RED
+        self.car_counter = 0
     
     def calc_cum_time(self):
         cumulative_time = 0
@@ -93,16 +93,38 @@ class Phase :
         self.status = status
         for lane in self.lanes:
             lane.change_status(status)
-
     
-
-
-
-
-
-
-
 class Intersection :
-    def __init__(self, Phase):
-        self.car = 0
+    def __init__(self, phases,algorithm,algorithm_type,cycle_time):
+        self.phases = phases
+        self.algorithm = algorithm
+        self.algorithm_type = algorithm_type
+        self.cycle_time = cycle_time
+
+    def set_green_phase_adaptive(self):
+        green_phase = self.algorithm(self.phases)
+        return green_phase
+    
+    def set_green_phase_acuated(self):
+        green_cycle = self.algorithm(self.phases)
+        return green_cycle
+    
+class simRunner :
+    def __init__(self,alg_type):
+        self.alg_type = alg_type
+        self.car_table = 0
+
+    def main_loop(self,end_time):
+        
+        while CUR_TIME < end_time :
+            CUR_TIME += TIME_INC
+            next_cars = check_cars_to_enter(self.car_table)
+            
+
+
+        
+        
+        return
+        
+        
 
