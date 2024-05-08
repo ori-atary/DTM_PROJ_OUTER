@@ -4,61 +4,11 @@
     # 3. we should have the same dict for every Lane,Phase ect.
     # 4. we neede to add path as where to and from the car is coming, then we can decide the lane it should go to. 
     # 5. path == {from,to} 
+    # 6. pay attention to update every car added to any lane to Lane->Phase->Intersection
 
 from data_structurs import *
+from functions import *
 
-TIME_INC = 0.5.f
-accelaration_type = {1,2,3}
-decelaration_type = {1,2,3}
-
-def isFirst(car):
-    return car.queue[0] == car
-
-def greenLight(car):
-    return True
-    
-
-# returns the car instance of the car standing before this one
-def nextCar(car):
-    if isFirst(car) :
-        return 0
-    for i in range(car.queue.qsize()) :
-        if car.queue[i] == car :
-            return car.queue[i-1]
-
-
-def IsFree2Move(car): 
-    # right now we are implementing simple solution: if the car has 3m or more, it free to move.
-    # maybe later we can try something more sofisticated.
-    if isFirst(car) and greenLight(car) : 
-        return True
-    next = nextCar(car)
-    return True if next.location - next.len - car.location > 3 else False
-
-def calc_lane(path):
-    lanes = []
-    for i in range(3):
-        if (path[0],path[1],i) in Lanes : 
-            lanes.append((path[0],path[1],i))
-    if len(lanes) == 1 :
-        return lanes[0]
-    # else choose the least busy lane
-    min_size = 1000
-    choosing = -1
-    for lane in lanes:
-        if min_size > LanesQ[lane].qsize():
-            min_size = LanesQ[lane].qsize()
-            choosing = lane
-    return choosing 
-
-def init_location(entrance_lane):
-    ret = {
-        N : (N,-60) ,
-        E : (E,-60) ,
-        S : (S,-60) ,
-        W : (W,-60) ,
-        }
-    return ret
 
 
 class Vehicle:
@@ -68,13 +18,13 @@ class Vehicle:
         self.len = len
         self.speed = speed
         self.path = path
-        self.lane = calc_lane(path)
+        self.lane = calcLane(path)
         self.enter_time = enter_time
         self.location = init_location(path[0])
         self.queue = LanesQ[self.lane]
 
         Cars[id] = self
-        LaneQ[self.lane].put(self.id)
+        LanesQ[self.lane].put(self.id)
         
     def move_car(self,next_car_loc):
         if IsFree2Move(self) : 
@@ -100,15 +50,59 @@ class Vehicle:
         else:
             self.location -= self.speed*TIME_INC
         return
+    
+    def wait_time(self):
+        return CUR_TIME - self.enter_time
 
+
+class Lane :
+    def __init__(self,From,To,num,id):
+        self.id = id
+        self.source = From
+        self.dest = To
+        self.num = num
+        self.q = queue.Queue()
+        self.tuple = (From,To,num)
+        self.cumulative_time = 0
+    
+    def calc_cum_time(self):
+        cumulative_time = 0
+        for car in self.q:
+            cumulative_time += car.wait_time()
+        self.cumulative_time = cumulative_time
+        return cumulative_time
+    
+    def change_status(self,status):
+        self.status = status
+
+class Phase : 
+    def __init__(self,lanes,id):
+        self.lanes = lanes
+        self.id = id
+        self.cumulative_time = 0
+        self.status = RED
+    
+    def calc_cum_time(self):
+        cumulative_time = 0
+        for lane in self.lanes:
+            cumulative_time += lane.calc_cum_time()
+        self.cumulative_time = cumulative_time
+        return cumulative_time
+    
+    def change_status(self,status):
+        self.status = status
+        for lane in self.lanes:
+            lane.change_status(status)
 
     
 
 
-# 
+
+
+
 
 
 class Intersection :
-    Phase[]
-
+    def __init__(self, Phase):
+        self.car = 0
 
