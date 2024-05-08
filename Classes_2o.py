@@ -11,6 +11,7 @@ decelaration_type = {1,2,3}
 def IsFree2Move(id): 
     # right now we are implementing simple solution: if the car has 3m or more, it free to move.
     # maybe later we can try something more sofisticated.
+    if isFirst and greenLight() return True
     
     return
 
